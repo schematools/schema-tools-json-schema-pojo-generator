@@ -1,5 +1,6 @@
 package io.schematools.generator;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -82,20 +83,35 @@ public class JsonSchemaPojoGenerator {
         for (Map.Entry<String, JsonNode> entry: properties) {
             String type = entry.getValue().get("type").asText();
             if (type.equals("string")) {
-                JFieldVar field = parentClass.field(JMod.PUBLIC, String.class, convertToCamelCase(entry.getKey(), false));
-                field.annotate(JsonProperty.class).param("value", entry.getKey());
+                this.handleStringType(parentClass, entry.getKey(), entry.getValue());
             }
             if (type.equals("integer")) {
                 JFieldVar field = parentClass.field(JMod.PUBLIC, Integer.class, convertToCamelCase(entry.getKey(), false));
                 field.annotate(JsonProperty.class).param("value", entry.getKey());
             }
             if (type.equals("number")) {
-                JFieldVar field = parentClass.field(JMod.PUBLIC, BigDecimal.class, convertToCamelCase(entry.getKey(), false));
+                JFieldVar field = parentClass.field(JMod.PUBLIC, Double.class, convertToCamelCase(entry.getKey(), false));
                 field.annotate(JsonProperty.class).param("value", entry.getKey());
             }
             if (type.equals("object")) {
                 this.handleObjectType(parentClass, entry.getKey(), entry.getValue());
             }
+        }
+    }
+
+    private void handleStringType(JDefinedClass parentClass, String name, JsonNode jsonNode) {
+        if (jsonNode.has("format")) {
+            String format = jsonNode.get("format").asText();
+            if (format.equals("decimal")) {
+                JFieldVar field = parentClass.field(JMod.PUBLIC, BigDecimal.class, convertToCamelCase(name, false));
+                field.annotate(JsonProperty.class).param("value", name);
+                field.annotate(JsonFormat.class).param("shape", JsonFormat.Shape.STRING);
+            } else {
+                throw new RuntimeException("Unknown format: " + format);
+            }
+        } else {
+            JFieldVar field = parentClass.field(JMod.PUBLIC, String.class, convertToCamelCase(name, false));
+            field.annotate(JsonProperty.class).param("value", name);
         }
     }
 

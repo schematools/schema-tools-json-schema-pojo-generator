@@ -10,6 +10,10 @@
     "foo_under": {
       "type": "string"
     },
+    "price": {
+      "type": "string",
+      "format": "decimal"
+    },
     "quantity": {
       "type": "number"
     },
