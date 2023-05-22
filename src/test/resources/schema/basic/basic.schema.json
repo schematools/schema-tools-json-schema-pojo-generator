@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.com/schema/json/common/basic/v1",
+  "title": "Basic",
+  "type": "object",
+  "properties": {
+    "foo": {
+      "type": "string"
+    },
+    "foo_under": {
+      "type": "string"
+    },
+    "quantity": {
+      "type": "number"
+    },
+    "temp": {
+      "type": "integer"
+    },
+    "test-object": {
+      "type": "object",
+      "properties": {
+        "foo_too": {
+          "type": "string"
+        }
+      }
+    }
+  }
+}
