@@ -21,14 +21,25 @@ import java.util.stream.Collectors;
 public class JsonSchemaPojoGenerator {
 
     private final ObjectMapper objectMapper = new ObjectMapper();
+
+    private final Map<URI, JsonSchema> jsonSchemaMap = new HashMap<>();
     private final JCodeModel jCodeModel = new JCodeModel();
+
+    private URI fileBaseUri = null;
 
     public void generate(String sourcePath, String destinationPath) {
         try {
             List<Path> filePaths = this.getAllFilePaths(sourcePath);
             for (Path path: filePaths) {
                 JsonSchema jsonSchema = this.createJsonSchema(path);
-                this.addJsonSchemaToCodeModel(jsonSchema);
+                jsonSchemaMap.put(jsonSchema.getIdAdapter().idUri(), jsonSchema);
+            }
+            for (JsonSchema jsonSchema: jsonSchemaMap.values()) {
+                if (!jsonSchema.isProcessed()) {
+                    this.fileBaseUri = jsonSchema.getIdAdapter().baseUri();
+                    this.addJsonSchemaToCodeModel(jsonSchema);
+                    this.fileBaseUri = null;
+                }
             }
             this.writeJavaFiles(destinationPath);
         } catch (IOException | JClassAlreadyExistsException e) {
@@ -62,39 +73,48 @@ public class JsonSchemaPojoGenerator {
         String className = convertToCamelCase(pathSegments.remove(pathSegments.size() - 1), true);
         hostSegments.addAll(pathSegments);
         String packageName = hostSegments.stream().collect(Collectors.joining("."));
-        return new IdAdapter(id, packageName, className, version);
+        return new IdAdapter(uri, packageName, className, version);
     }
 
     private String convertToCamelCase(String in, boolean capitalizeFirstLetter) {
         return CaseUtils.toCamelCase(in, capitalizeFirstLetter, '-', '_');
     }
 
-    private void addJsonSchemaToCodeModel(JsonSchema jsonSchema) throws JClassAlreadyExistsException {
-        JDefinedClass jDefinedClass = jCodeModel._class(jsonSchema.idAdapter().fullyQualifiedClassName());
+    private JDefinedClass addJsonSchemaToCodeModel(JsonSchema jsonSchema) throws JClassAlreadyExistsException {
+        if (jsonSchema.isProcessed()){
+            return jsonSchema.getjDefinedClass();
+        }
+        JDefinedClass jDefinedClass = jCodeModel._class(jsonSchema.getIdAdapter().fullyQualifiedClassName());
         jDefinedClass.annotate(Generated.class)
                 .param("value", "io.schematools")
-                .param("comments", jsonSchema.idAdapter().version())
+                .param("comments", jsonSchema.getIdAdapter().version())
                 .param("date", LocalDateTime.now().toString());
         Set<Map.Entry<String, JsonNode>> properties = jsonSchema.properties();
         this.handleProperties(jDefinedClass, properties);
+        jsonSchema.setProcessed(true);
+        jsonSchema.setjDefinedClass(jDefinedClass);
+        return jDefinedClass;
     }
 
     private void handleProperties(JDefinedClass parentClass, Set<Map.Entry<String, JsonNode>> properties) throws JClassAlreadyExistsException {
         for (Map.Entry<String, JsonNode> entry: properties) {
-            String type = entry.getValue().get("type").asText();
-            if (type.equals("string")) {
-                this.handleStringType(parentClass, entry.getKey(), entry.getValue());
-            }
-            if (type.equals("integer")) {
-                JFieldVar field = parentClass.field(JMod.PUBLIC, Integer.class, convertToCamelCase(entry.getKey(), false));
-                field.annotate(JsonProperty.class).param("value", entry.getKey());
-            }
-            if (type.equals("number")) {
-                JFieldVar field = parentClass.field(JMod.PUBLIC, Double.class, convertToCamelCase(entry.getKey(), false));
-                field.annotate(JsonProperty.class).param("value", entry.getKey());
-            }
-            if (type.equals("object")) {
-                this.handleObjectType(parentClass, entry.getKey(), entry.getValue());
+            if (entry.getValue().has("$ref")) {
+                handleRef(parentClass, entry.getKey(), entry.getValue());
+            } else {
+                String type = entry.getValue().get("type").asText();
+                if (type.equals("string")) {
+                    this.handleStringType(parentClass, entry.getKey(), entry.getValue());
+                } else if (type.equals("integer")) {
+                    JFieldVar field = parentClass.field(JMod.PUBLIC, Integer.class, convertToCamelCase(entry.getKey(), false));
+                    field.annotate(JsonProperty.class).param("value", entry.getKey());
+                } else if (type.equals("number")) {
+                    JFieldVar field = parentClass.field(JMod.PUBLIC, Double.class, convertToCamelCase(entry.getKey(), false));
+                    field.annotate(JsonProperty.class).param("value", entry.getKey());
+                } else if (type.equals("object")) {
+                    this.handleObjectType(parentClass, entry.getKey(), entry.getValue());
+                } else {
+                    throw new RuntimeException("Unknown type: " + type);
+                }
             }
         }
     }
@@ -121,6 +141,15 @@ public class JsonSchemaPojoGenerator {
         field.annotate(JsonProperty.class).param("value", name);
         Set<Map.Entry<String, JsonNode>> properties = node.get("properties").properties();
         this.handleProperties(jDefinedClass, properties);
+    }
+
+    private void handleRef(JDefinedClass parentClass, String name, JsonNode node) throws JClassAlreadyExistsException {
+        String ref = node.get("$ref").asText();
+        String absRef = this.fileBaseUri.toString() + ref;
+        JsonSchema jsonSchema = jsonSchemaMap.get(URI.create(absRef));
+        JDefinedClass jDefinedClass = addJsonSchemaToCodeModel(jsonSchema);
+        JFieldVar field = parentClass.field(JMod.PUBLIC, jDefinedClass, convertToCamelCase(name, false));
+        field.annotate(JsonProperty.class).param("value", name);
     }
 
     private void writeJavaFiles(String destinationPath) throws IOException {

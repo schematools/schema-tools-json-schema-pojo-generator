@@ -27,6 +27,9 @@
           "type": "string"
         }
       }
+    },
+    "my-basic-ref": {
+      "$ref": "/schema/json/common/basic-ref/v1"
     }
   }
 }

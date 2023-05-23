@@ -1,0 +1,14 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.com/schema/json/common/basic-ref/v1",
+  "title": "BasicRef",
+  "type": "object",
+  "properties": {
+    "test1": {
+      "type": "string"
+    },
+    "test2": {
+      "type": "string"
+    }
+  }
+}
