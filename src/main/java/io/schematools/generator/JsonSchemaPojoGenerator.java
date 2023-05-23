@@ -27,9 +27,9 @@ public class JsonSchemaPojoGenerator {
 
     private URI fileBaseUri = null;
 
-    public void generate(String sourcePath, String destinationPath) {
+    public void generate(JsonSchemaPojoGeneratorConfiguration jsonSchemaPojoGeneratorConfiguration) {
         try {
-            List<Path> filePaths = this.getAllFilePaths(sourcePath);
+            List<Path> filePaths = this.getAllFilePaths(jsonSchemaPojoGeneratorConfiguration.sourcePath());
             for (Path path: filePaths) {
                 JsonSchema jsonSchema = this.createJsonSchema(path);
                 jsonSchemaMap.put(jsonSchema.getIdAdapter().idUri(), jsonSchema);
@@ -41,7 +41,7 @@ public class JsonSchemaPojoGenerator {
                     this.fileBaseUri = null;
                 }
             }
-            this.writeJavaFiles(destinationPath);
+            this.writeJavaFiles(jsonSchemaPojoGeneratorConfiguration.destinationPath());
         } catch (IOException | JClassAlreadyExistsException e) {
             throw new RuntimeException(e);
         }
