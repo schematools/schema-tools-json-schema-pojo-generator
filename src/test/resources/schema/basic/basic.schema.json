@@ -18,7 +18,9 @@
       "type": "number"
     },
     "temp": {
-      "type": "integer"
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 100
     },
     "test-object": {
       "type": "object",

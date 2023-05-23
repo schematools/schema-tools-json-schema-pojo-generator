@@ -6,6 +6,8 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sun.codemodel.*;
 import jakarta.annotation.Generated;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import org.apache.commons.text.CaseUtils;
@@ -108,8 +110,7 @@ public class JsonSchemaPojoGenerator {
                 if (type.equals("string")) {
                     this.handleStringType(parentClass, entry.getKey(), entry.getValue());
                 } else if (type.equals("integer")) {
-                    JFieldVar field = parentClass.field(JMod.PUBLIC, Integer.class, convertToCamelCase(entry.getKey(), false));
-                    field.annotate(JsonProperty.class).param("value", entry.getKey());
+                    this.handleIntegerType(parentClass, entry);
                 } else if (type.equals("number")) {
                     JFieldVar field = parentClass.field(JMod.PUBLIC, Double.class, convertToCamelCase(entry.getKey(), false));
                     field.annotate(JsonProperty.class).param("value", entry.getKey());
@@ -135,6 +136,17 @@ public class JsonSchemaPojoGenerator {
         } else {
             JFieldVar field = parentClass.field(JMod.PUBLIC, String.class, convertToCamelCase(name, false));
             field.annotate(JsonProperty.class).param("value", name);
+        }
+    }
+
+    private void handleIntegerType(JDefinedClass parentClass, Map.Entry<String, JsonNode> entry) {
+        JFieldVar field = parentClass.field(JMod.PUBLIC, Integer.class, convertToCamelCase(entry.getKey(), false));
+        field.annotate(JsonProperty.class).param("value", entry.getKey());
+        if (entry.getValue().has("minimum")) {
+            field.annotate(Min.class).param("value", entry.getValue().get("minimum").intValue());
+        }
+        if (entry.getValue().has("maximum")) {
+            field.annotate(Max.class).param("value", entry.getValue().get("maximum").intValue());
         }
     }
 
