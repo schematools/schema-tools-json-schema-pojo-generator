@@ -1,0 +1,14 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.com/schema/other/pack/child2/v1",
+  "title": "Child2",
+  "type": "object",
+  "properties": {
+    "test1": {
+      "type": "string"
+    },
+    "test2": {
+      "type": "string"
+    }
+  }
+}

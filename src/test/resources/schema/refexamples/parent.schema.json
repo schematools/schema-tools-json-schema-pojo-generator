@@ -1,0 +1,14 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.com/other/repack/parent/v1",
+  "title": "Parent",
+  "type": "object",
+  "properties": {
+    "foo": {
+      "type": "string"
+    },
+    "child1": {
+      "$ref": "/schema/json/common/child1/v1"
+    }
+  }
+}

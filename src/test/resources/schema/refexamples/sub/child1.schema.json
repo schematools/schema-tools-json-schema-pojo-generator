@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.com/schema/json/common/child1/v1",
+  "title": "Child1",
+  "type": "object",
+  "properties": {
+    "test1": {
+      "type": "string"
+    },
+    "test2": {
+      "type": "string"
+    },
+    "child2": {
+      "$ref": "/schema/other/pack/child2/v1"
+    }
+  }
+}
