@@ -116,6 +116,8 @@ public class JsonSchemaPojoGenerator {
                     field.annotate(JsonProperty.class).param("value", entry.getKey());
                 } else if (type.equals("object")) {
                     this.handleObjectType(parentClass, entry.getKey(), entry.getValue());
+                } else if (type.equals("array")) {
+                    this.handleArrayType(parentClass, entry.getKey(), entry.getValue());
                 } else {
                     throw new RuntimeException("Unknown type: " + type);
                 }
@@ -164,6 +166,22 @@ public class JsonSchemaPojoGenerator {
         JsonSchema jsonSchema = jsonSchemaMap.get(URI.create(absRef));
         JDefinedClass jDefinedClass = addJsonSchemaToCodeModel(jsonSchema);
         JFieldVar field = parentClass.field(JMod.PUBLIC, jDefinedClass, convertToCamelCase(name, false));
+        field.annotate(JsonProperty.class).param("value", name);
+    }
+
+    private void handleArrayType(JDefinedClass parentClass, String name, JsonNode node) {
+        JsonNode jsonNode = node.get("items");
+        String type = jsonNode.get("type").asText();
+        if (type.equals("integer")) {
+            this.addArrayTypeToClass(parentClass, name, Integer.class);
+        } if (type.equals("string")) {
+            this.addArrayTypeToClass(parentClass, name, String.class);
+        }
+    }
+
+    private void addArrayTypeToClass(JDefinedClass parentClass, String name, Class clazz) {
+        JClass listClass = jCodeModel.ref(List.class).narrow(clazz);
+        JFieldVar field = parentClass.field(JMod.PUBLIC, listClass, convertToCamelCase(name, false), JExpr._new(jCodeModel.ref(ArrayList.class)));
         field.annotate(JsonProperty.class).param("value", name);
     }
 

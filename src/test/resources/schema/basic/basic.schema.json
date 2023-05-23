@@ -32,7 +32,28 @@
     },
     "my-basic-ref": {
       "$ref": "/schema/json/common/basic-ref/v1"
+    },
+    "moar-numbahs": {
+      "type": "array",
+      "items": {
+        "type": "integer"
+      }
+    },
+    "moar-strangs": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "array-refs": {
+      "type": "array",
+      "items": {
+        "$ref": "/schema/json/common/basic-ref/v1"
+      }
     }
   },
-  "required": ["foo", "my-basic-ref"]
+  "required": [
+    "foo",
+    "my-basic-ref"
+  ]
 }
