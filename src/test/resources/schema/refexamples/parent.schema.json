@@ -10,5 +10,6 @@
     "child1": {
       "$ref": "/schema/json/common/child1/v1"
     }
-  }
+  },
+  "required": ["foo", "child1"]
 }

@@ -13,7 +13,7 @@ public class JsonSchemaPojoGeneratorTest {
 
     @Test
     void refexamples() {
-        var config = new JsonSchemaPojoGeneratorConfiguration("src/test/resources/schema/basic", "target/generated-sources");
+        var config = new JsonSchemaPojoGeneratorConfiguration("src/test/resources/schema/refexamples", "target/generated-sources");
         JsonSchemaPojoGenerator jsonSchemaPojoGenerator = new JsonSchemaPojoGenerator();
         jsonSchemaPojoGenerator.generate(config);
     }

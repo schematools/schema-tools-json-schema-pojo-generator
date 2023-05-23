@@ -10,5 +10,6 @@
     "test2": {
       "type": "string"
     }
-  }
+  },
+  "required": ["test1"]
 }

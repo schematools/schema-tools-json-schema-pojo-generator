@@ -6,6 +6,8 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sun.codemodel.*;
 import jakarta.annotation.Generated;
+import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.NotNull;
 import org.apache.commons.text.CaseUtils;
 
 import java.io.File;
@@ -91,6 +93,7 @@ public class JsonSchemaPojoGenerator {
                 .param("date", LocalDateTime.now().toString());
         Set<Map.Entry<String, JsonNode>> properties = jsonSchema.properties();
         this.handleProperties(jDefinedClass, properties);
+        this.handleRequired(jDefinedClass, jsonSchema);
         jsonSchema.setProcessed(true);
         jsonSchema.setjDefinedClass(jDefinedClass);
         return jDefinedClass;
@@ -150,6 +153,19 @@ public class JsonSchemaPojoGenerator {
         JDefinedClass jDefinedClass = addJsonSchemaToCodeModel(jsonSchema);
         JFieldVar field = parentClass.field(JMod.PUBLIC, jDefinedClass, convertToCamelCase(name, false));
         field.annotate(JsonProperty.class).param("value", name);
+    }
+
+    private void handleRequired(JDefinedClass parentClass, JsonSchema jsonSchema) {
+        if (jsonSchema.getRootJsonNode().has("required")) {
+            jsonSchema.getRootJsonNode().get("required").elements().forEachRemaining(jsonNode1 -> {
+                JFieldVar jFieldVar = parentClass.fields().get(convertToCamelCase(jsonNode1.asText(), false));
+                if (jFieldVar.type().fullName().equals("java.lang.String")) {
+                    jFieldVar.annotate(NotEmpty.class);
+                } else {
+                    jFieldVar.annotate(NotNull.class);
+                }
+            });
+        }
     }
 
     private void writeJavaFiles(String destinationPath) throws IOException {

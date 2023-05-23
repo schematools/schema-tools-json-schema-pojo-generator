@@ -13,5 +13,6 @@
     "child2": {
       "$ref": "/schema/other/pack/child2/v1"
     }
-  }
+  },
+  "required": ["test1", "child2"]
 }
